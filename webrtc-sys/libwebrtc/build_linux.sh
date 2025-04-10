@@ -16,6 +16,7 @@
 
 arch=""
 profile="release"
+toolchain="sysroot"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -31,6 +32,14 @@ while [ "$#" -gt 0 ]; do
       profile="$2"
       if [ "$profile" != "debug" ] && [ "$profile" != "release" ]; then
         echo "Error: Invalid value for --profile. Must be 'debug' or 'release'."
+        exit 1
+      fi
+      shift 2
+      ;;
+    --toolchain)
+      toolchain="$2"
+      if [ "$toolchain" != "sysroot" ] && [ "$toolchain" != "host" ]; then
+        echo "Error: Invalid value for --toolchain. Must be 'sysroot' or 'host'."
         exit 1
       fi
       shift 2
@@ -56,14 +65,22 @@ then
   git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
 fi
 
+old_path="$PATH"
 export COMMAND_DIR=$(cd $(dirname $0); pwd)
 export PATH="$(pwd)/depot_tools:$PATH"
 export OUTPUT_DIR="$(pwd)/src/out-$arch-$profile"
 export ARTIFACTS_DIR="$(pwd)/linux-$arch-$profile"
 
+if [ "$toolchain" = "host" ]; then
+  export VPYTHON_BYPASS='manually managed python not supported by chrome operations'
+fi
+
 if [ ! -e "$(pwd)/src" ]
 then
-  gclient sync -D --no-history
+  cd depot_tools
+  git apply "$COMMAND_DIR/patches/gclient_ignore_platform_specific_deps.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
+  cd ..
+  gclient sync -D --no-history -j 2
 fi
 
 cd src
@@ -79,7 +96,9 @@ cd ..
 
 mkdir -p "$ARTIFACTS_DIR/lib"
 
-python3 "./src/build/linux/sysroot_scripts/install-sysroot.py" --arch="$arch"
+if [ "$toolchain" = "sysroot" ]; then
+  python3 "./src/build/linux/sysroot_scripts/install-sysroot.py" --arch="$arch"
+fi
 
 debug="false"
 if [ "$profile" = "debug" ]; then
@@ -110,6 +129,19 @@ args="is_debug=$debug  \
 
 if [ "$debug" = "true" ]; then
   args="${args} is_asan=true is_lsan=true";
+fi
+
+if [ "$toolchain" = "host" ]; then
+  export PATH="$old_path"
+  [ -n "$CC" ] || export CC=clang
+  [ -n "$CXX" ] || export CXX=clang++
+  [ -n "$AR" ] || export AR=ar
+  [ -n "$NM" ] || export NM=nm
+  args="${args} \
+    custom_toolchain=\"//build/toolchain/linux/unbundle:default\" \
+    host_toolchain=\"//build/toolchain/linux/unbundle:default\" \
+    clang_use_chrome_plugins=false \
+    use_sysroot=false";
 fi
 
 # generate ninja files
