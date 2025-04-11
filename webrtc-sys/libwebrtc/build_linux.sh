@@ -81,6 +81,8 @@ then
   git apply "$COMMAND_DIR/patches/gclient_ignore_platform_specific_deps.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
   cd ..
   gclient sync -D --no-history --nohooks -j 2
+  python3 src/build/landmines.py --landmine-scripts src/tools_webrtc/get_landmines.py --src-dir src
+  python3 src/build/util/lastchange.py -o src/build/util/LASTCHANGE
 fi
 
 cd src
