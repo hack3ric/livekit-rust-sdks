@@ -67,31 +67,27 @@ fi
 
 old_path="$PATH"
 export COMMAND_DIR=$(cd $(dirname $0); pwd)
-export PATH="$PATH:$(pwd)/depot_tools"
+export PATH="$PATH:$(pwd)/depot_tools" DEPOT_TOOLS_UPDATE=0
 export OUTPUT_DIR="$(pwd)/src/out-$arch-$profile"
 export ARTIFACTS_DIR="$(pwd)/linux-$arch-$profile"
 
-# if [ "$toolchain" = "host" ]; then
-#   export VPYTHON_BYPASS='manually managed python not supported by chrome operations'
-# fi
+if [ "$toolchain" = "host" ]; then
+  export VPYTHON_BYPASS='manually managed python not supported by chrome operations'
+fi
 
 if [ ! -e "$(pwd)/src" ]
 then
   cd depot_tools
   git apply "$COMMAND_DIR/patches/gclient_ignore_platform_specific_deps.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
-  if [ "$arch" = "riscv64" ]; then
-    sed -i -e '/wheel: </,$d' .vpython3 gsutil.vpython3
-    vpython3 -m pip install httplib2==0.13.1 six==1.10.0 requests==2.31.0
-  fi
   cd ..
-  gclient sync -D --no-history -j 2
+  gclient sync -D --no-history --nohooks -j 2
 fi
 
 cd src
 git apply "$COMMAND_DIR/patches/add_licenses.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
 git apply "$COMMAND_DIR/patches/ssl_verify_callback_with_native_handle.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
 git apply "$COMMAND_DIR/patches/add_deps.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
-# git apply "$COMMAND_DIR/patches/gn_use_system_python3.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
+git apply "$COMMAND_DIR/patches/gn_use_system_python3.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
 git apply "$COMMAND_DIR/patches/generate_licenses_use_system_gn.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
 
 if [ "$arch" = "riscv64" ]; then
@@ -142,7 +138,7 @@ if [ "$debug" = "true" ]; then
 fi
 
 if [ "$toolchain" = "host" ]; then
-  # export PATH="$old_path"
+  export PATH="$old_path"
   [ -n "$CC" ] || export CC=clang
   [ -n "$CXX" ] || export CXX=clang++
   [ -n "$AR" ] || export AR=ar
