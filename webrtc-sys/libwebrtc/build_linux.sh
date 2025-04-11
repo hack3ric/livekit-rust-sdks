@@ -90,6 +90,10 @@ git apply "$COMMAND_DIR/patches/add_deps.patch" -v --ignore-space-change --ignor
 git apply "$COMMAND_DIR/patches/gn_use_system_python3.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
 git apply "$COMMAND_DIR/patches/generate_licenses_use_system_gn.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
 
+if [ "$arch" = "riscv64" ]; then
+  git apply "$COMMAND_DIR/patches/riscv-ffmpeg.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
+fi
+
 cd third_party
 git apply "$COMMAND_DIR/patches/abseil_use_optional.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
 cd ..
