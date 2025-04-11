@@ -88,6 +88,7 @@ git apply "$COMMAND_DIR/patches/add_licenses.patch" -v --ignore-space-change --i
 git apply "$COMMAND_DIR/patches/ssl_verify_callback_with_native_handle.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
 git apply "$COMMAND_DIR/patches/add_deps.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
 git apply "$COMMAND_DIR/patches/gn_use_system_python3.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
+git apply "$COMMAND_DIR/patches/generate_licenses_use_system_gn.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
 
 cd third_party
 git apply "$COMMAND_DIR/patches/abseil_use_optional.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
