@@ -22,8 +22,8 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
     --arch)
       arch="$2"
-      if [ "$arch" != "x64" ] && [ "$arch" != "arm64" ]; then
-        echo "Error: Invalid value for --arch. Must be 'x64' or 'arm64'."
+      if [ "$arch" != "x64" ] && [ "$arch" != "arm64" ] && [ "$arch" != "riscv64" ]; then
+        echo "Error: Invalid value for --arch. Must be 'x64', 'arm64' or 'riscv64'."
         exit 1
       fi
       shift 2
@@ -95,6 +95,10 @@ cd src
 git apply "$COMMAND_DIR/patches/add_licenses.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
 git apply "$COMMAND_DIR/patches/ssl_verify_callback_with_native_handle.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
 git apply "$COMMAND_DIR/patches/add_deps.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
+
+if [ "$arch" = "riscv64" ]; then
+  git apply "$COMMAND_DIR/patches/riscv-ffmpeg.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
+fi
 
 if [ "$toolchain" = "host" ]; then
   git apply "$COMMAND_DIR/patches/gn_use_system_python3.patch" -v --ignore-space-change --ignore-whitespace --whitespace=nowarn
